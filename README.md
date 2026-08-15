@@ -32,10 +32,6 @@ XSS mitigation
 
 Each Lab introduces a specific concept and becomes progressively more challenging.
 
-🧪 Labs
-
-#LabDifficultyStatus01Reflected XSS🟢 Easy✅ Completed02Stored XSS🟢 Easy🚧 Coming Soon03DOM-based XSS🟢 Easy🚧 Coming Soon04HTML Attribute XSS🟡 Medium🚧 Coming Soon05Event Handler XSS🟡 Medium🚧 Coming Soon06JavaScript Context XSS🟡 Medium🚧 Coming Soon07XSS with Input Filtering🟠 Hard🚧 Coming Soon08Encoding Challenges🟠 Hard🚧 Coming Soon09DOM XSS & Dangerous Sinks🔴 Advanced🚧 Coming Soon10Advanced XSS Challenge🔴 Advanced🚧 Coming Soon
-
 🚀 How to Use
 
 Each Lab contains:
@@ -60,10 +56,6 @@ Understand the root cause.
 Study the mitigation.
 
 Try to solve each Lab before opening the solution.
-
-📂 Project Structure
-
-xss-labs/ │ ├── README.md │ ├── lab_01_reflected_xss/ │ ├── README.md │ ├── app.py │ ├── requirements.txt │ │ │ ├── templates/ │ │ └── index.html │ │ │ └── solution/ │ └── README.md │ └── ... 
 
 🛡️ Ethics & Disclaimer
 
