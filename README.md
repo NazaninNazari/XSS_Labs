@@ -86,4 +86,6 @@ Understand the context.
 XSS is not only about finding a working payload.
 The real skill is understanding:
 Where does the input come from? ↓ Where does it go? ↓ How is it transformed? ↓ What context does it enter? ↓ How does the browser interpret it? ↓ How can it be prevented? 
+
+---
 Created by N0aziXss 🕷️

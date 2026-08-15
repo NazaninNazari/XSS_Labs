@@ -128,4 +128,4 @@ Lab 02 — Reflected XSS in HTML Attribute Context
 The next Lab will introduce a different XSS context and require you to think differently about how the browser interprets user-controlled input.
 
 ---
-Created by **N0aziXss**
+Created by N0aziXss 🕷️

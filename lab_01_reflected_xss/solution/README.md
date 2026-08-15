@@ -131,34 +131,6 @@ If an application intentionally allows users to submit HTML, use a well-maintain
 5. Consider Content Security Policy
 A strong Content Security Policy can provide an additional layer of protection, but it should be treated as defense-in-depth.
 
-🧠 Final Lab Summary
-Reflected XSS
-┌─────────────────────┐
-│     User Input      │
-│       ?q=...        │
-└──────────┬──────────┘ 
-           ↓
-┌─────────────────────┐
-│        Flask        │
-│  request.args.get() │ 
-└──────────┬──────────┘
-           ↓
-┌─────────────────────┐
-│       Jinja2        │
-│    query | safe     │
-└──────────┬──────────┘
-           ↓
-┌─────────────────────┐
-│     HTML Response   │
-└──────────┬──────────┘
-           ↓
-┌─────────────────────┐
-│       Browser       │
-│ HTML is interpreted │
-└──────────┬──────────┘
-           ↓
-  JavaScript Execution 
-
 🏁 Lab Completed
 You have successfully learned:
 Source → Data Flow → Context → Unsafe Rendering → Reflected XSS → Mitigation
