@@ -29,7 +29,6 @@ Find:
 Start by inspecting how the `username` parameter is received by Flask.
 
 ### Hint 2
-
 Follow the value from:
 URL
 ↓
@@ -37,7 +36,7 @@ Flask
 ↓
 Template
 ↓
-<script>
+Tag <script>
 ↓
 JavaScript
 
