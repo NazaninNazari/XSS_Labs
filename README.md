@@ -69,4 +69,12 @@ The real skill is understanding:
 Where does the input come from? ↓ Where does it go? ↓ How is it transformed? ↓ What context does it enter? ↓ How does the browser interpret it? ↓ How can it be prevented? 
 
 ---
+
+## ⚖️ Disclaimer
+This project is created for educational purposes, security research, and authorized security testing.
+All vulnerabilities demonstrated in this repository are intentionally introduced into controlled environments.
+The author does not encourage unauthorized testing or attacks against systems that you do not own or do not have explicit permission to assess.
+Always obtain proper authorization before performing security testing on external systems.
+
+---
 Created by N0aziXss 🕷️

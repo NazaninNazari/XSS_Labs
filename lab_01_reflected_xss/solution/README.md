@@ -1,148 +1,180 @@
 # Solution — Lab 01: Reflected XSS
 
 ## 🎯 Vulnerability
-This Lab contains a Reflected Cross-Site Scripting (XSS) vulnerability in the search functionality.
-The vulnerability occurs because user-controlled input is rendered as trusted HTML instead of being safely escaped.
+
+This lab contains a Reflected Cross-Site Scripting (XSS) vulnerability in the search functionality.
+The vulnerability exists because user-controlled input is rendered as trusted HTML instead of being escaped.
 
 ---
 
-### 1. Identify the Source
-The application receives the q parameter from the HTTP request.
-In app.py:
-query = request.args.get("q", "") 
-The user controls the value of q.
-For example:
-http://127.0.0.1:5000/?q=hello 
-The data flow starts here:
-User Input ↓ ?q=hello ↓ request.args.get("q") ↓ query 
-Therefore:
-Source: q URL parameter.
+## 1. Identify the Source
 
-### 2. Follow the Data Flow
-After retrieving the value, the application passes it to the Jinja2 template:
-return render_template("index.html", query=query) 
-The complete server-side flow is:
-HTTP Request ↓ ?q=USER_INPUT ↓ request.args.get("q") ↓ query ↓ render_template() ↓ index.html 
+The application receives the `q` parameter from the HTTP request. In `app.py`:
 
-### 3. Identify the Vulnerable Code
-The input is rendered in templates/index.html:
-{% if query %} <h2> Search results for: {{ query | safe }} </h2> {% endif %} 
-The important part is:
-{{ query | safe }} 
+```python
+query = request.args.get("q", "")
+```
 
-### 4. Understand safe
-Jinja2 normally escapes HTML characters when rendering variables.
-For example, HTML supplied as user input should normally be treated as text rather than markup.
-However, the safe filter tells Jinja2 to treat the value as trusted HTML.
-In this intentionally vulnerable Lab:
-User Input ↓ {{ query | safe }} ↓ Trusted HTML 
-This means attacker-controlled HTML can become part of the rendered page.
+The user controls the value of `q`, for example:
 
-### 5. Identify the XSS Context
+```
+http://127.0.0.1:5000/?q=hello
+```
+
+Data flow so far:
+
+```
+User Input → ?q=hello → request.args.get("q") → query
+```
+
+**Source:** the `q` URL parameter.
+
+## 2. Follow the Data Flow
+
+The value is passed to the Jinja2 template:
+
+```python
+return render_template("index.html", query=query)
+```
+
+Complete server-side flow:
+
+```
+HTTP Request → ?q=USER_INPUT → request.args.get("q") → query → render_template() → index.html
+```
+
+## 3. Identify the Vulnerable Code
+
+In `templates/index.html`:
+
+```html
+<div class="text-lg text-white break-words">{{ query | safe }}</div>
+```
+
+The important part is `{{ query | safe }}`.
+
+## 4. Understand `safe`
+
+Flask enables Jinja2 auto-escaping by default for `.html` templates, so special characters such as `<` and `>` are converted to HTML entities and displayed as text.
+
+The `safe` filter tells Jinja2: *"This value is trusted HTML, do not escape it."*
+
+```
+User Input → {{ query | safe }} → Trusted HTML
+```
+
+This means attacker-controlled HTML can become part of the page.
+
+## 5. Identify the XSS Context
+
 The value is inserted between HTML tags:
-<h2> USER_INPUT </h2> 
-Therefore the input is in:
-HTML Body Context 
-This is important because XSS behavior depends heavily on the context in which user-controlled data is interpreted.
 
-### 6. Proof of Concept
-A harmless proof of concept is:
-<script>alert(1)</script> 
-When supplied through the q parameter:
-http://127.0.0.1:5000/?q=... 
-the application reflects the input into the HTML response.
-Because the value is rendered as trusted HTML, the browser interprets the <script> element as markup.
-The JavaScript then executes:
-alert(1) 
+```html
+<div> USER_INPUT </div>
+```
 
-### 7. Why Is This Reflected XSS?
-The vulnerability follows this sequence:
-User ↓ HTTP Request ↓ q parameter ↓ Flask ↓ Jinja2 ↓ HTTP Response ↓ Browser ↓ JavaScript Execution 
-The input is reflected from the request into the response.
-It is not stored in a database.
-Therefore, the vulnerability is classified as:
-Reflected XSS 
+Context: **HTML Body Context**.
 
-### 8. Root Cause
-The root cause is unsafe rendering of untrusted user input as HTML.
-The application uses:
-{{ query | safe }} 
-This disables the normal escaping behavior for this value.
-The application is effectively treating attacker-controlled data as trusted HTML.
+XSS behavior depends heavily on the context in which user-controlled data is interpreted.
 
-### 9. Secure Fix
-The safe filter should not be used for this untrusted value.
+## 6. Proof of Concept
 
-❌ Vulnerable
-{{ query | safe }} 
+A harmless proof of concept:
 
-✅ Safer
-{{ query }} 
+```html
+<script>alert(1)</script>
+```
 
-The template should become:
-{% if query %} <h2> Search results for: {{ query }} </h2> {% endif %} 
-Jinja2 can then apply its normal HTML escaping behavior.
+Supplied through the `q` parameter (or the search box), the application reflects it into the response. Because it is rendered as trusted HTML, the browser parses the `<script>` element and executes `alert(1)`.
 
-### 10. Verify the Fix
-After removing | safe, restart the application.
-Then test the same harmless proof of concept:
-<script>alert(1)</script> 
-The browser should display the input as text instead of executing it.
-The important observation is:
-Before Fix: User Input ↓ Trusted HTML ↓ JavaScript Execution After Fix: User Input ↓ HTML Escaping ↓ Text ↓ No JavaScript Execution 
+## 7. Why Is This Reflected XSS?
 
-### 11. Security Lesson
-The important lesson from this Lab is that XSS analysis is not simply about finding a payload.
-A security tester should understand the complete data flow:
-Source ↓ User-Controlled Input ↓ Processing ↓ Context ↓ Sink ↓ Browser Interpretation 
-When investigating an XSS vulnerability, ask:
+```
+User → HTTP Request → q parameter → Flask → Jinja2 → HTTP Response → Browser → JavaScript Execution
+```
 
-Where does the input originate?
-Where does it go?
-Is it transformed?
-What context does it enter?
-How does the browser interpret that context?
+The input is reflected from the request into the response and is **not stored** in a database. Therefore it is **Reflected XSS**.
 
-### 12. Key Takeaways
-Reflected XSS occurs when user-controlled input is reflected into a response and interpreted as executable content.
-The q parameter is the source of the attacker-controlled input.
-Flask passes the value to the Jinja2 template.
-The vulnerable rendering occurs in the HTML body context.
-safe causes the value to be treated as trusted HTML.
-Removing safe allows normal template escaping to protect the output.
-XSS prevention must consider the context in which data is rendered.
-CSP can provide additional defense-in-depth but should not replace fixing the underlying XSS vulnerability.
+## 8. Root Cause
+
+Untrusted user input is rendered as HTML. `{{ query | safe }}` disables the normal escaping for this value.
+
+## 9. Secure Fix
+
+❌ Vulnerable:
+
+```html
+<div class="text-lg text-white break-words">{{ query | safe }}</div>
+```
+
+✅ Safer:
+
+```html
+<div class="text-lg text-white break-words">{{ query }}</div>
+```
+
+Jinja2 now applies its normal HTML escaping.
+
+## 10. Verify the Fix
+
+Restart the application (`debug=False`, so templates are not reloaded automatically) and test the same payload:
+
+```html
+<script>alert(1)</script>
+```
+
+The browser displays it as text. In View Source you will see `&lt;script&gt;alert(1)&lt;/script&gt;`.
+
+```
+Before fix: User Input → Trusted HTML → JavaScript Execution
+After fix:  User Input → HTML Escaping → Text → No JavaScript Execution
+```
+
+## 11. Security Lesson
+
+XSS analysis is not just about finding a payload. Understand the full data flow:
+
+```
+Source → User-Controlled Input → Processing → Context → Sink → Browser Interpretation
+```
+
+Ask yourself:
+
+- Where does the input originate?
+- Where does it go?
+- Is it transformed?
+- What context does it enter?
+- How does the browser interpret that context?
+
+## 12. Key Takeaways
+
+- Reflected XSS occurs when user-controlled input is reflected into a response and interpreted as executable content.
+- The `q` parameter is the source.
+- Flask passes the value to the Jinja2 template.
+- The vulnerable rendering happens in the HTML body context.
+- `safe` makes Jinja2 treat the value as trusted HTML.
+- Removing `safe` lets auto-escaping protect the output.
+- XSS prevention must consider the context where data is rendered.
+- CSP is defense-in-depth and must not replace fixing the root cause.
 
 ---
 
 ## 🛡️ Mitigation
-## Recommended defenses include:
-### 1. Use automatic escaping
-Allow the template engine to escape untrusted values:
-{{ query }} 
 
-### 2. Avoid unnecessary raw HTML rendering
-Do not mark untrusted user input as safe HTML unless it has been properly sanitized and the application genuinely requires HTML input.
-
-### 3. Use context-appropriate output encoding
-The correct encoding strategy depends on where the data is inserted:
-HTML Context Attribute Context JavaScript Context CSS Context URL Context 
-Each context has different security requirements.
-
-### 4. Use sanitization when HTML is actually required
-If an application intentionally allows users to submit HTML, use a well-maintained HTML sanitization approach rather than simply disabling escaping.
-
-### 5. Consider Content Security Policy
-A strong Content Security Policy can provide an additional layer of protection, but it should be treated as defense-in-depth.
+1. **Use automatic escaping.** Let the template engine escape untrusted values: `{{ query }}`
+2. **Avoid unnecessary raw HTML rendering.** Do not mark untrusted input as safe unless it is sanitized and HTML input is truly required.
+3. **Use context-appropriate output encoding.** HTML, attribute, JavaScript, CSS and URL contexts each need different encoding.
+4. **Sanitize when HTML is required.** Use a well-maintained sanitization library instead of just disabling escaping.
+5. **Consider a Content Security Policy** as an additional layer of protection.
 
 ---
 
 ## 🏁 Lab Completed
-You have successfully learned:
+
+```
 Source → Data Flow → Context → Unsafe Rendering → Reflected XSS → Mitigation
+```
 
----
-
-Lab: 01 — Reflected XSS 
-Difficulty: Easy
-Author: N0aziXss
+**Lab:** 01 — Reflected XSS
+**Difficulty:** Easy
+**Author:** N0aziXss
